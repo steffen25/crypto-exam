@@ -28,7 +28,7 @@ MongoClient.connect(url, function(err, db) {
 
 
 // --------------------------------
-// CREATE USER
+// CREATE USER ENDPOINT
 // --------------------------------
 
 app.post('/user/', function (req, res) {
@@ -63,10 +63,23 @@ app.post('/user/', function (req, res) {
 })
 
 // --------------------------------
-// LOGIN
+// LOGIN ENDPOINT
 // --------------------------------
 
 app.post('/login/', function (req, res) {
+    var email = req.body.email;
+    var password = req.body.password;
+
+    var collection = database.collection('users');
+
+    collection.findOne({ email: email}, function(err, user) {
+        if (err) {
+            return res.json({error: "Internal failure - no user with that email", error: err})
+        } else {
+            return res.json({success:"Found", user: user})
+        }
+    })
+
 
 })
 
