@@ -102,7 +102,7 @@ app.post('/login/', function (req, res) {
 
                     // return the information including token as JSON
                     var data = {
-                        token: 'JWT ' + token,
+                        token: token,
                         user: user
                     }
                     return res.json({data: data})
@@ -114,11 +114,17 @@ app.post('/login/', function (req, res) {
 })
 
 app.put('/user', verifyToken, function (req, res) {
+
     // Payload from token middleware
     var user = req.user;
-    var collection = database.collection('users');
-    var name = req.body.name;
 
+    // Mongo DB collection
+    var collection = database.collection('users');
+
+    // Grab value to update
+    var firstName = req.body.firstName;
+
+    // If JWT is verified - find user to modify by looking up email.
     collection.findOne({ email: user.email }, function (err, user) {
         if (err) {
             return res.status(500).json({error: err});
@@ -126,13 +132,14 @@ app.put('/user', verifyToken, function (req, res) {
 
         // Could not find user by the email in the token
         if (!user) {
-            return res.status(404).json({error: "user could not be found"});
+            return res.status(404).json({error: "User could not be found"});
         }
-        
+
+        // Update user by
         collection.update({ _id: user._id },
             { $set:
                {
-                 name: name
+                 firstName: firstName
                }
             }, function (err, updatedUser) {
                 if (err) {
