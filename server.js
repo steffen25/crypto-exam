@@ -1,9 +1,11 @@
 // Dependencies
 const express = require('express');
+const fs = require('fs');
 const BodyParser = require('body-parser');
 const ObjectId = require('mongodb').ObjectID;
 const MongoClient = require('mongodb').MongoClient
 const bcrypt = require('bcrypt');
+var jwt = require('jsonwebtoken');
 const saltRounds = 10;
 app = express();
 app.use(BodyParser.urlencoded({
@@ -31,7 +33,7 @@ MongoClient.connect(url, function(err, db) {
 // CREATE USER ENDPOINT
 // --------------------------------
 
-app.post('/user/', function (req, res) {
+app.post('/user', function (req, res) {
 
     // Create variable containing body from request (user information)
     var user = req.body;
@@ -67,22 +69,51 @@ app.post('/user/', function (req, res) {
 // --------------------------------
 
 app.post('/login/', function (req, res) {
+
     var email = req.body.email;
     var password = req.body.password;
 
     var collection = database.collection('users');
 
-    collection.findOne({ email: email}, function(err, user) {
+
+    collection.findOne({ email: email }, function (err, user) {
         if (err) {
-            return res.json({error: "Internal failure - no user with that email", error: err})
-        } else {
-            return res.json({success:"Found", user: user})
+            return callback(err, null);
         }
-    })
 
+        // Email not found - for security reason response is same as when password is not right
+        if (!user) {
+            return res.json({error: "No user found", error: err})
+        }
 
+        bcrypt.compare(password, user.password, function (err, matches) {
+
+            if (!err && matches) {
+
+                var privateKey = fs.readFileSync('./api.rsa')
+                // if user is found and password is right create a token
+
+                user.password = undefined;
+                user.exp = Math.floor(Date.now() / 1000) + (60 * 60)
+
+                var token = jwt.sign(user, privateKey, {algorithm: "RS256"}, function(err, token) {
+
+                    // return the information including token as JSON
+                    var data = {
+                        token: 'JWT ' + token,
+                        user: user
+                    }
+                    return res.json({data: data})
+                });
+            }
+            else return res.json({error: err})
+        });
+    });
 })
 
+app.put('/user', function (req, res) {
+    
+})
 
 app.listen(process.env.PORT || 4000);
 
