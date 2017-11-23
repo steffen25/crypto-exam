@@ -5,6 +5,7 @@ const BodyParser = require('body-parser');
 const ObjectId = require('mongodb').ObjectID;
 const MongoClient = require('mongodb').MongoClient
 const bcrypt = require('bcrypt');
+const verifyToken = require('./verifytoken');
 var jwt = require('jsonwebtoken');
 const saltRounds = 10;
 app = express();
@@ -67,7 +68,6 @@ app.post('/user', function (req, res) {
 // --------------------------------
 // LOGIN ENDPOINT
 // --------------------------------
-
 app.post('/login/', function (req, res) {
 
     var email = req.body.email;
@@ -86,6 +86,7 @@ app.post('/login/', function (req, res) {
             return res.json({error: "No user found", error: err})
         }
 
+        // hashing
         bcrypt.compare(password, user.password, function (err, matches) {
 
             if (!err && matches) {
@@ -95,7 +96,8 @@ app.post('/login/', function (req, res) {
 
                 user.password = undefined;
                 user.exp = Math.floor(Date.now() / 1000) + (60 * 60)
-
+                
+                // signing
                 var token = jwt.sign(user, privateKey, {algorithm: "RS256"}, function(err, token) {
 
                     // return the information including token as JSON
@@ -111,8 +113,40 @@ app.post('/login/', function (req, res) {
     });
 })
 
-app.put('/user', function (req, res) {
-    
+app.put('/user', verifyToken, function (req, res) {
+    // Payload from token middleware
+    var user = req.user;
+    var collection = database.collection('users');
+    var name = req.body.name;
+
+    collection.findOne({ email: user.email }, function (err, user) {
+        if (err) {
+            return res.status(500).json({error: err});
+        }
+
+        // Could not find user by the email in the token
+        if (!user) {
+            return res.status(404).json({error: "user could not be found"});
+        }
+        
+        collection.update({ _id: user._id },
+            { $set:
+               {
+                 name: name
+               }
+            }, function (err, updatedUser) {
+                if (err) {
+                    return res.status(500).json({error: err});
+                }
+
+                return res.status(200).json({success: true});
+            }
+         )
+
+        
+    });
+
+
 })
 
 app.listen(process.env.PORT || 4000);
