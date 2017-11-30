@@ -20,7 +20,7 @@ var database;
 // Setup connection to databse
 // --------------------------------
 var url = 'mongodb://localhost:27017/cryptoexam';
-MongoClient.connect(url, function(err, db) {
+MongoClient.connect(url, function (err, db) {
     if (err) {
         console.log('An error occured while connecting to the database')
     } else {
@@ -43,21 +43,21 @@ app.post('/user', function (req, res) {
     var collection = database.collection('users');
 
     // Generate salt to be used in hash function.
-    bcrypt.genSalt(saltRounds, function(err, salt) {
+    bcrypt.genSalt(saltRounds, function (err, salt) {
 
         // Hash users password using generated salt.
-        bcrypt.hash(user.password, salt, function(err, hash) {
+        bcrypt.hash(user.password, salt, function (err, hash) {
 
             // Assign user password to generated hash - Key deriviation function.
             user.password = hash;
 
             // Insert user document into database
-            collection.insertOne( user, function(err, result) {
+            collection.insertOne(user, function (err, result) {
                 if (err) {
-                    return res.json({error: "Internal failure", error: err})
+                    return res.json({ error: "Internal failure", error: err })
                 } else {
                     user.password = undefined;
-                    return res.json({success:"Inserted user into DB", user: user})
+                    return res.json({ success: "Inserted user into DB", user: user })
                     db.close();
                 }
             });
@@ -68,7 +68,7 @@ app.post('/user', function (req, res) {
 // --------------------------------
 // LOGIN ENDPOINT
 // --------------------------------
-app.post('/login/', function (req, res) {
+app.post('/login', function (req, res) {
 
     var email = req.body.email;
     var password = req.body.password;
@@ -83,7 +83,7 @@ app.post('/login/', function (req, res) {
 
         // Email not found - for security reason response is same as when password is not right
         if (!user) {
-            return res.json({error: "No user found", error: err})
+            return res.json({ error: "No user found", error: err })
         }
 
         // hashing
@@ -96,19 +96,19 @@ app.post('/login/', function (req, res) {
 
                 user.password = undefined;
                 user.exp = Math.floor(Date.now() / 1000) + (60 * 60)
-                
+
                 // signing
-                var token = jwt.sign(user, privateKey, {algorithm: "RS256"}, function(err, token) {
+                var token = jwt.sign(user, privateKey, { algorithm: "RS256" }, function (err, token) {
 
                     // return the information including token as JSON
                     var data = {
                         token: token,
                         user: user
                     }
-                    return res.json({data: data})
+                    return res.json({ data: data })
                 });
             }
-            else return res.json({error: err})
+            else return res.json({ error: err })
         });
     });
 })
@@ -127,30 +127,31 @@ app.put('/user', verifyToken, function (req, res) {
     // If JWT is verified - find user to modify by looking up email.
     collection.findOne({ email: user.email }, function (err, user) {
         if (err) {
-            return res.status(500).json({error: err});
+            return res.status(500).json({ error: err });
         }
 
         // Could not find user by the email in the token
         if (!user) {
-            return res.status(404).json({error: "User could not be found"});
+            return res.status(404).json({ error: "User could not be found" });
         }
 
         // Update user by
         collection.update({ _id: user._id },
-            { $set:
-               {
-                 firstName: firstName
-               }
+            {
+                $set:
+                    {
+                        firstName: firstName
+                    }
             }, function (err, updatedUser) {
                 if (err) {
-                    return res.status(500).json({error: err});
+                    return res.status(500).json({ error: err });
                 }
 
-                return res.status(200).json({success: true});
+                return res.status(200).json({ success: true });
             }
-         )
+        )
 
-        
+
     });
 
 
