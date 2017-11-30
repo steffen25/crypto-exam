@@ -55,11 +55,11 @@ app.post('/user', function (req, res) {
             collection.insertOne(user, function (err, result) {
                 if (err) {
                     return res.json({ error: "Internal failure", error: err })
-                } else {
-                    user.password = undefined;
-                    return res.json({ success: "Inserted user into DB", user: user })
-                    db.close();
                 }
+
+                user.password = undefined;
+                db.close();
+                return res.json({ success: "Inserted user into DB", user: user })
             });
         });
     });
@@ -108,7 +108,7 @@ app.post('/login', function (req, res) {
                     return res.json({ data: data })
                 });
             }
-            else return res.json({ error: err })
+            return res.json({ error: err })
         });
     });
 })
