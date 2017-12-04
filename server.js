@@ -58,7 +58,6 @@ app.post('/user', function (req, res) {
                 }
 
                 user.password = undefined;
-                db.close();
                 return res.json({ success: "Inserted user into DB", user: user })
             });
         });
@@ -107,8 +106,9 @@ app.post('/login', function (req, res) {
                     }
                     return res.json({ data: data })
                 });
+            } else {
+                return res.json({ error: err })
             }
-            return res.json({ error: err })
         });
     });
 })
