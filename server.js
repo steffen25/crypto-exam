@@ -30,9 +30,9 @@ MongoClient.connect(url, function (err, db) {
 });
 
 
-// --------------------------------
-// CREATE USER ENDPOINT
-// --------------------------------
+// ----------------------------------------------------------------
+//                  CREATE USER ENDPOINT
+// ----------------------------------------------------------------
 
 app.post('/user', function (req, res) {
 
@@ -44,6 +44,8 @@ app.post('/user', function (req, res) {
 
     // Generate salt to be used in hash function.
     bcrypt.genSalt(saltRounds, function (err, salt) {
+
+        console.log(salt)
 
         // Hash users password using generated salt.
         bcrypt.hash(user.password, salt, function (err, hash) {
@@ -64,9 +66,10 @@ app.post('/user', function (req, res) {
     });
 })
 
-// --------------------------------
-// LOGIN ENDPOINT
-// --------------------------------
+// ----------------------------------------------------------------
+//                  LOGIN ENDPOINT
+// ----------------------------------------------------------------
+
 app.post('/login', function (req, res) {
 
     var email = req.body.email;
@@ -112,6 +115,10 @@ app.post('/login', function (req, res) {
         });
     });
 })
+
+// ----------------------------------------------------------------
+//              EDIT USERNAME ENDPOINT
+// ----------------------------------------------------------------
 
 app.put('/user', verifyToken, function (req, res) {
 
