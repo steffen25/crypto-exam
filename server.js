@@ -1,5 +1,6 @@
 // Dependencies
 const express = require('express');
+require('dotenv').config()
 const fs = require('fs');
 const BodyParser = require('body-parser');
 const ObjectId = require('mongodb').ObjectID;
@@ -19,7 +20,12 @@ var database;
 // --------------------------------
 // Setup connection to databse
 // --------------------------------
-var url = 'mongodb://localhost:27017/cryptoexam';
+
+var dbUser = process.env.DB_USER;
+var dbPw = process.env.DB_PASS;
+
+var url = 'mongodb://' + dbUser + ':' + dbPw + '@ds129926.mlab.com:29926/cryptoexam';
+//var url = 'mongodb://localhost:27017/cryptoexam';
 MongoClient.connect(url, function (err, db) {
     if (err) {
         console.log('An error occured while connecting to the database')
