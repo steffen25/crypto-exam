@@ -98,8 +98,8 @@ app.post('/login', function (req, res) {
         bcrypt.compare(password, user.password, function (err, matches) {
 
             if (!err && matches) {
-
-                var privateKey = fs.readFileSync('./api.rsa')
+                
+                var privateKey = process.env.API_RSA
                 // if user is found and password is right create a token
 
                 user.password = undefined;
